@@ -1,4 +1,71 @@
 # Threat-Hunt-Port-of-entry
+## Scenario
+INCIDENT BRIEF - Azuki Import/Export - 梓貿易株式会社
+
+Competitor undercut our 6-year shipping contract by exactly 3%. Our supplier contracts and pricing data appeared on underground forums.
+
+### Company:
+Azuki Import/Export Trading Co. - 23 employees, shipping logistics Japan/SE Asia
+
+### Compromised Systems:
+AZUKI-SL (IT admin workstation)
+
+### Available Evidence:
+Microsoft Defender for Endpoint logs
+```kql
+DeviceProcessEvents
+| where DeviceName == "azuki-sl"
+| where Timestamp between (datetime(2025-11-19) .. datetime(2025-11-20))
+```
+
+This report includes:
+
+- 📅 Timeline reconstruction of auditing, reconnaissance, and attempted exfiltration of data on the device **`azuki-sl`**
+- 📜 Detailed queries using Microsoft Defender Advanced Hunting (KQL)
+- 🎯 MITRE ATT&CK mapping to understand TTP alignment
+- 🧪 Evidence-based summaries supporting each flag and behavior discovered
+
+---
+
+## 🧰 Platforms and Tools
+
+**Analysis Environment:**
+- Microsoft Defender for Endpoint
+- Log Analytics Workspace
+- Azure
+
+**Techniques Used:**
+- Kusto Query Language (KQL)
+- Behavioral analysis of endpoint logs (DeviceProcessEvents, DeviceNetworkEvents, DeviceRegistryEvents)
+
+---
+
+## 📔 Summary of Findings (Flags)
+
+| Flag | Objective | Finding | TimeStamp |
+|------|------------------------------------|---------|-----------|
+| 1 | Identify the source IP address of the Remote Desktop Protocol connection | `88.97.178.12` was the IP address accessing the compromised account | `2025-11-19T00:57:18.3409813Z` |
+| 2 | Identify the user account that was compromised for initial access | The account `kenji.sato` has been compromised | `2025-11-19T00:57:18.3409813Z` |
+| 3 | Identify the command and argument used to enumerate network neighbours | `ARP.EXE -a` was executed for enumeration | `2025-11-19T19:04:01.773778Z` |
+| 4 | Identify the PRIMARY staging directory where malware was stored | `C:\ProgramData\WindowsCache` was found to be the primary staging directory | `2025-11-19T19:05:33.7665036Z` |
+| 5 | How many file extensions were excluded from Windows Defender scanning? | `3` file extensions were excluded | `2025-11-19T18:49:27.7301011Z` |
+| 6 | What temporary folder path was excluded from Windows Defender scanning? | `C:\Users\KENJI~1.SAT\AppData\Local\Temp` was excluded from Windows Defender scans | `2025-11-19T18:49:27.6830204Z` |
+| 7 | Identify the Windows-native binary the attacker abused to download files | `certutil.exe` was used to download malware | `2025-11-19T19:06:58.5778439Z` |
+| 8 | Identify the name of the scheduled task created for persistence | `Windows Update Check` was found to be a disguised scheduled task | `2025-11-19T19:07:46.9796512Z` |
+| 9 | Identify the executable path configured in the scheduled task | Folder path designated for the executable: `C:\ProgramData\WindowsCache\svchost.exe`| `2025-11-19T19:07:46.9796512Z` |
+| 10 | Identify the IP address of the command and control server | `78.141.196.6` was found to be the C2 server | `2025-11-19T18:37:26.3725923Z` |
+| 11 | Identify the destination port used for command and control communications | Port `443` was the destination port used | `2025-11-19T19:11:04.1766386Z` |
+| 12 | Identify the filename of the credential dumping tool | `mm.exe` was identified as the credential dumping tool | `2025-11-19T19:07:22.8551193Z` |
+| 13 | Identify the module used to extract logon passwords from memory | `Sekurlsa::logonpasswords` module was utilized | `2025-11-19T19:08:26.2804285Z` |
+| 14 | Identify the compressed archive filename used for data exfiltration | `export-data.zip` was created for data exfiltration | `2025-11-19T19:08:58.0244963Z` |
+| 15 | Identify the cloud service used to exfiltrate stolen data | `Discord` was cloud service used to exfiltrate the data | `2025-11-19T19:09:21.3881743Z` |
+| 16 | Identify the first Windows event log cleared by the attacker | `Security` was the first event log cleared | `2025-11-19T19:11:39.0934399Z` |
+| 17 | Identify the backdoor account username created by the attacker | `support` was the name of account created | `2025-11-19T19:09:53.0528848Z` |
+| 18 | Identify the PowerShell script file used to automate the attack chain | The PowerShell script `wupdate.ps1` was automated | `2025-11-19T18:49:48.7079818Z` |
+| 19 | What IP address was targeted for lateral movement? | `10.1.0.188` | `2025-11-19T19:10:42.057693Z` |
+| 20 | Identify the remote access tool used for lateral movement | `mstsc.exe` was identified as the RAT | `2025-11-19T19:10:41.372526Z` |
+
+---
 ###  Flag 1: INITIAL ACCESS - Remote Access Source
 
 **Objective:**
